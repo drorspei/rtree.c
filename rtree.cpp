@@ -78,7 +78,7 @@ static struct node *node_new(struct rtree *rtree, bool leaf){
     size_t rectsz = 8 * rtree->dims * 2 * (rtree->max_items+1);
     size_t datasz = elsize * (rtree->max_items+1);
     size_t nodesz = sizeof(struct node) + rectsz + datasz;
-    struct node *node = rtmalloc(nodesz);
+    struct node *node = (struct node*)(rtmalloc(nodesz));
     if (!node) {
         return NULL;
     }
@@ -100,7 +100,7 @@ static void item_copy(struct rtree *rtree, void *item, void *from) {
 
 // rect_at returns a node rect at index
 static double *rect_at(struct rtree *rtree, struct node *node, int index) {
-    return (void*)(((char*)node->rect) + (8 * rtree->dims * 2) * index);
+    return (double*)(void*)(((char*)node->rect) + (8 * rtree->dims * 2) * index);
 }
 static void rect_copy(struct rtree *rtree, double *rect, double *from) {
     memcpy(rect, from, 8*rtree->dims*2);
@@ -159,7 +159,7 @@ static void rect_calc(struct rtree *rtree, struct node *node, double *rect) {
 struct rtree *rtree_new(size_t elsize, int dims) {
     if (dims < 1) panic("invalid dims");
     if (elsize == 0) panic("elsize is zero");
-    struct rtree *rtree = rtmalloc(sizeof(struct rtree));
+    struct rtree *rtree = (struct rtree* )rtmalloc(sizeof(struct rtree));
     if (!rtree) {
         return NULL;
     }
@@ -171,7 +171,7 @@ struct rtree *rtree_new(size_t elsize, int dims) {
     rtree->dims = dims;
     rtree->max_items = MAXITEMS;
     rtree->min_items = (rtree->max_items*MINFILL/100)+1;
-    rtree->rect = rtmalloc(8*dims*2);
+    rtree->rect = (double *)rtmalloc(8*dims*2);
     if (!rtree->rect) {
         rtfree(rtree);
         return NULL;
@@ -194,7 +194,7 @@ static struct node *gimme_branch(struct rtree *rtree) {
 
 static bool grow_group(struct group *group) {
     int cap = group->cap?group->cap*2:1;
-    struct node **nodes = rtmalloc(sizeof(struct node*)*cap);
+    struct node **nodes = (struct node **)rtmalloc(sizeof(struct node*)*cap);
     if (!nodes) {
         return false;
     }
@@ -423,10 +423,10 @@ static void node_insert(struct rtree *rtree, struct node *node, double *rect,
     int dims = rtree->dims;
     int index;
     switch (rtree->dims) {
-    case 2:  index = subtree_2(node->rect, node->count, rect, dims); break;
-    case 3:  index = subtree_3(node->rect, node->count, rect, dims); break;
-    case 4:  index = subtree_4(node->rect, node->count, rect, dims); break;
-    default: index = subtree_d(node->rect, node->count, rect, dims);
+    case 2:  index = subtree_2((double*)node->rect, node->count, rect, dims); break;
+    case 3:  index = subtree_3((double*)node->rect, node->count, rect, dims); break;
+    case 4:  index = subtree_4((double*)node->rect, node->count, rect, dims); break;
+    default: index = subtree_d((double*)node->rect, node->count, rect, dims);
     }
     struct node *child = *node_at(rtree, node, index);
     double *child_rect = rect_at(rtree, node, index);
@@ -600,7 +600,7 @@ fn_search(struct rtree *rtree, struct node *node, double *rect, \
        void *udata) \
 { \
     int dims = rtree->dims; \
-    double *crect = node->rect; \
+    double *crect = (double *)node->rect; \
     if (node->leaf) { \
         for (int i = 0; i < node->count; i++) { \
             if (fn_inter(rect, crect, dims)) { \
@@ -694,7 +694,7 @@ fn_node_delete(struct rtree *rtree, struct node *node, double *rect, \
                void *item) \
 {\
     int dims = rtree->dims;\
-    double *crect = node->rect;\
+    double *crect = (double *)node->rect;\
     if (node->leaf) {\
         for (int i = 0; i < node->count; i++) {\
             if (fn_inter(rect, crect, dims)) {\
