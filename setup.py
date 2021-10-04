@@ -10,7 +10,24 @@ class CustomInstall(install):
         process.wait()
         install.run(self)
 
-module = Extension('rtreecpy',
+from distutils.command.build_ext import build_ext as build_ext_orig
+class CTypesExtension(Extension): pass
+class build_ext(build_ext_orig):
+    def build_extension(self, ext):
+        self._ctypes = isinstance(ext, CTypesExtension)
+        return super().build_extension(ext)
+
+    def get_export_symbols(self, ext):
+        if self._ctypes:
+            return ext.export_symbols
+        return super().get_export_symbols(ext)
+
+    def get_ext_filename(self, ext_name):
+        if self._ctypes:
+            return ext_name + '.so'
+        return super().get_ext_filename(ext_name)
+
+module = CTypesExtension('rtreecpy',
                    sources = ['rtree.cpp', 'batch_search.cpp'],
                    include_dirs = ['.'],
                    extra_compile_args=['-fPIC', '-O3', '-shared', '-fpermissive'])
@@ -34,7 +51,8 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ),
-    cmdclass={'install': CustomInstall},
+    #cmdclass={'install': CustomInstall},
+    cmdclass={'build_ext': build_ext},
     ext_modules=[module],
 )
 
