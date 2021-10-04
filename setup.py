@@ -14,22 +14,26 @@ from distutils.command.build_ext import build_ext as build_ext_orig
 class CTypesExtension(Extension): pass
 class build_ext(build_ext_orig):
     def build_extension(self, ext):
+        #import pdb;pdb.set_trace()
+        print("build_extension!!!")
         self._ctypes = isinstance(ext, CTypesExtension)
         return super().build_extension(ext)
 
     def get_export_symbols(self, ext):
+        print("get_export_symbols")
         if self._ctypes:
             return ext.export_symbols
         return super().get_export_symbols(ext)
 
     def get_ext_filename(self, ext_name):
+        print("get_ext_filename")
         if self._ctypes:
             return ext_name + '.so'
         return super().get_ext_filename(ext_name)
 
-module = CTypesExtension('rtreecpy',
-                   sources = ['rtree.cpp', 'batch_search.cpp'],
-                   include_dirs = ['.'],
+module = CTypesExtension('rtreecpy.librtreec',
+                   ['rtreecpy/rtree.cpp', 'rtreecpy/batch_search.cpp'],
+                   #include_dirs = [''],
                    extra_compile_args=['-fPIC', '-O3', '-shared', '-fpermissive'])
 
 
@@ -52,6 +56,7 @@ setup(
         "Operating System :: OS Independent",
     ),
     #cmdclass={'install': CustomInstall},
+    py_modules=["rtreecpy.rtreec"],
     cmdclass={'build_ext': build_ext},
     ext_modules=[module],
 )

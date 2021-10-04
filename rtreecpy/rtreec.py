@@ -3,7 +3,7 @@ import pyarrow
 import numpy as np
 import os
 
-rt = ctypes.CDLL(os.path.abspath("librtree.so"))
+rt = ctypes.CDLL(os.path.join(os.path.dirname(__file__), "librtreec.so"))
 
 rt.rtree_new.argtypes = [ctypes.c_size_t, ctypes.c_int]
 rt.rtree_new.restype = ctypes.c_void_p
