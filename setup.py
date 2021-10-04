@@ -56,7 +56,7 @@ setup(
         "Operating System :: OS Independent",
     ),
     #cmdclass={'install': CustomInstall},
-    py_modules=["rtreecpy.rtreec"],
+    py_modules=["rtreecpy"],
     cmdclass={'build_ext': build_ext},
     ext_modules=[module],
 )
